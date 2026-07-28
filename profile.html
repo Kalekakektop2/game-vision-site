@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет — Game-Vision</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="grid-bg">
+
+    <div class="orb" style="width:400px;height:400px;background:#00f0ff;top:-100px;left:-100px;"></div>
+    <div class="orb" style="width:500px;height:500px;background:#b026ff;top:40%;right:-150px;animation-delay:2s;"></div>
+
+    <!-- НАВБАР -->
+    <nav class="navbar fixed top-0 left-0 right-0 z-50 border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+            <a href="index.html" class="flex items-center gap-3 flex-shrink-0">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center glow-cyan text-black font-display font-black">GV</div>
+                <span class="font-display font-bold text-lg tracking-wider">GAME<span class="text-cyan-400">VISION</span></span>
+            </a>
+            <div class="flex items-center gap-3">
+                <div class="lang-switch">
+                    <button class="lang-btn active" data-lang="ru" onclick="setLanguage('ru')">RU</button>
+                    <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+                </div>
+                <button id="logoutBtn" class="px-4 py-2.5 rounded-lg text-sm font-semibold border border-pink-400/40 text-pink-400 hover:bg-pink-400/10 transition" data-i18n="profile.logout">Выйти из аккаунта</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="relative pt-32 pb-20 px-6 min-h-screen">
+        <div class="max-w-5xl mx-auto">
+
+            <!-- Защита: не авторизован -->
+            <div id="authGate" class="text-center py-20">
+                <div class="text-6xl mb-6">🔒</div>
+                <h2 class="font-display font-bold text-3xl mb-4" data-i18n="profile.protected">Этот раздел доступен только авторизованным пользователям</h2>
+                <a href="index.html" class="btn-cta text-black font-bold px-8 py-4 rounded-xl text-lg inline-block" data-i18n="profile.back">На главную</a>
+            </div>
+
+            <!-- Содержимое профиля (показывается после авторизации) -->
+            <div id="profileContent" class="hidden">
+
+                <!-- Заголовок -->
+                <div class="flex items-center gap-5 mb-10">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-black font-display font-black text-3xl glow-cyan" id="profileAvatar">?</div>
+                    <div>
+                        <h1 class="font-display font-black text-3xl md:text-4xl" data-i18n="profile.welcome">Привет, игрок!</h1>
+                        <p class="text-gray-400 text-sm mt-1"><span data-i18n="profile.email">Email:</span> <span id="profileEmail" class="text-cyan-300">—</span></p>
+                    </div>
+                </div>
+
+                <!-- Карточка подписки -->
+                <div class="ai-panel rounded-2xl p-8 mb-6">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                        <h2 class="font-display font-bold text-xl flex items-center gap-2">
+                            <span>⭐</span>
+                            <span data-i18n="profile.subscription">Подписка</span>
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <span class="pulse-dot" id="subStatusDot" style="background:#8a8a9a;box-shadow:0 0 10px #8a8a9a;"></span>
+                            <span id="subStatusText" class="font-display font-bold text-sm status-inactive" data-i18n="profile.statusInactive">Не приобретена</span>
+                        </div>
+                    </div>
+
+                    <!-- Сетка статистики -->
+                    <div class="grid sm:grid-cols-3 gap-4 mb-8">
+                        <!-- Статус -->
+                        <div class="profile-stat">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="profile.status">Статус</div>
+                            <div id="statStatus" class="font-display font-bold text-lg status-inactive" data-i18n="profile.statusInactive">Не приобретена</div>
+                        </div>
+                        <!-- Куплено -->
+                        <div class="profile-stat">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="profile.purchased">Куплено</div>
+                            <div id="statPurchased" class="font-display font-bold text-lg text-gray-300" data-i18n="profile.notSet">—</div>
+                        </div>
+                        <!-- Истекает -->
+                        <div class="profile-stat">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="profile.expires">Истекает</div>
+                            <div id="statExpires" class="font-display font-bold text-lg text-gray-300" data-i18n="profile.notSet">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Счётчик дней -->
+                    <div class="profile-stat mb-8" style="background:linear-gradient(135deg,rgba(0,240,255,0.08),rgba(176,38,255,0.08));border-color:rgba(0,240,255,0.3);">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wider mb-1" data-i18n="profile.left">Осталось</div>
+                                <div class="flex items-baseline gap-2">
+                                    <span id="statDaysLeft" class="font-display font-black text-4xl gradient-text">0</span>
+                                    <span class="text-gray-400" data-i18n="profile.days">дн.</span>
+                                </div>
+                            </div>
+                            <div class="text-5xl">⏳</div>
+                        </div>
+                    </div>
+
+                    <!-- Кнопки действий -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="renewBtn" class="btn-cta text-black font-bold flex-1 py-4 rounded-xl text-lg flex items-center justify-center gap-2">
+                            <span>🔄</span>
+                            <span data-i18n="profile.renew">Продлить подписку</span>
+                        </button>
+                        <button id="logoutBtn2" class="px-6 py-4 rounded-xl text-lg font-semibold border border-pink-400/40 text-pink-400 hover:bg-pink-400/10 transition flex items-center justify-center gap-2">
+                            <span>🚪</span>
+                            <span data-i18n="profile.logout">Выйти из аккаунта</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Назад -->
+                <div class="text-center">
+                    <a href="index.html" class="text-gray-500 hover:text-cyan-400 transition text-sm" data-i18n="profile.back">На главную</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Скрипты -->
+    <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subscription.js"></script>
+
+    <script>
+        // ============================================================
+        // Логика страницы профиля
+        // ============================================================
+
+        let authCheckDone = false;
+
+        // Кнопки выхода (обе ведут к реальному выходу через Supabase)
+        const logoutHandler = () => {
+            if (window.gvAuth) window.gvAuth.logout();
+        };
+        document.getElementById('logoutBtn').addEventListener('click', logoutHandler);
+        const logout2 = document.getElementById('logoutBtn2');
+        if (logout2) logout2.addEventListener('click', logoutHandler);
+
+        /**
+         * Главная функция отрисовки профиля.
+         * Дёргает auth + subscription.
+         */
+        async function renderProfile() {
+            const authGate = document.getElementById('authGate');
+            const profileContent = document.getElementById('profileContent');
+
+            // Ждём, пока auth.js определит пользователя
+            await waitForAuth();
+
+            const user = window.gvAuth.getUser();
+            if (!user) {
+                // Не авторизован → показываем заглушку
+                authGate.classList.remove('hidden');
+                profileContent.classList.add('hidden');
+                return;
+            }
+
+            // Авторизован → показываем профиль
+            authGate.classList.add('hidden');
+            profileContent.classList.remove('hidden');
+
+            // Заполняем данные пользователя
+            const email = user.email || '—';
+            document.getElementById('profileEmail').textContent = email;
+            document.getElementById('profileAvatar').textContent = email[0].toUpperCase();
+
+            // Загружаем подписку
+            await window.gvSub.fetch();
+            renderSubscription();
+        }
+
+        /**
+         * Отрисовка карточки подписки.
+         */
+        function renderSubscription() {
+            const sub = window.gvSub.getData();
+            const statusKey = sub ? sub.status : 'inactive';
+
+            // Тексты статусов
+            const statusLabels = {
+                active: { ru: 'Активна', en: 'Active', class: 'status-active', color: '#2dff88' },
+                expired: { ru: 'Истекла', en: 'Expired', class: 'status-expired', color: '#ff9f0a' },
+                inactive: { ru: 'Не приобретена', en: 'Not purchased', class: 'status-inactive', color: '#8a8a9a' }
+            };
+            const lang = window.currentLang();
+            const st = statusLabels[statusKey] || statusLabels.inactive;
+
+            // Статус (в шапке карточки и в сетке)
+            document.getElementById('subStatusText').textContent = st[lang];
+            document.getElementById('subStatusText').className = 'font-display font-bold text-sm ' + st.class;
+            document.getElementById('statStatus').textContent = st[lang];
+            document.getElementById('statStatus').className = 'font-display font-bold text-lg ' + st.class;
+
+            // Цвет точки статуса
+            const dot = document.getElementById('subStatusDot');
+            dot.style.background = st.color;
+            dot.style.boxShadow = '0 0 10px ' + st.color;
+            if (statusKey === 'active') {
+                dot.style.animation = 'pulse 1.5s ease-in-out infinite';
+            } else {
+                dot.style.animation = 'none';
+            }
+
+            // Даты
+            const purchasedEl = document.getElementById('statPurchased');
+            const expiresEl = document.getElementById('statExpires');
+            const daysEl = document.getElementById('statDaysLeft');
+
+            if (sub && sub.purchased_at) {
+                purchasedEl.textContent = window.gvSub.formatDate(sub.purchased_at);
+                purchasedEl.classList.remove('text-gray-500');
+                purchasedEl.classList.add('text-gray-300');
+            } else {
+                purchasedEl.textContent = window.t('profile.notSet');
+                purchasedEl.classList.add('text-gray-500');
+            }
+
+            if (sub && sub.expires_at) {
+                expiresEl.textContent = window.gvSub.formatDate(sub.expires_at);
+                expiresEl.classList.remove('text-gray-500');
+                expiresEl.classList.add('text-gray-300');
+            } else {
+                expiresEl.textContent = window.t('profile.notSet');
+                expiresEl.classList.add('text-gray-500');
+            }
+
+            // Счётчик дней
+            const days = window.gvSub.getDaysLeft();
+            daysEl.textContent = days !== null ? days : '0';
+        }
+
+        /**
+         * Ждёт, пока auth.js восстановит сессию.
+         */
+        function waitForAuth() {
+            return new Promise(resolve => {
+                if (window.gvAuth && window.gvAuth.getUser()) return resolve();
+                let tries = 0;
+                const interval = setInterval(() => {
+                    tries++;
+                    if ((window.gvAuth && window.gvAuth.getUser()) || tries > 40) {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 150);
+            });
+        }
+
+        /**
+         * Перерисовка профиля при смене языка (глобально, вызывается из i18n.js).
+         */
+        window.refreshProfile = function () {
+            if (window.gvAuth && window.gvAuth.getUser()) renderSubscription();
+        };
+
+        // Кнопка продления подписки
+        document.getElementById('renewBtn').addEventListener('click', () => {
+            window.gvSub.buy();
+        });
+
+        // Запуск
+        document.addEventListener('DOMContentLoaded', renderProfile);
+    </script>
+</body>
+</html>

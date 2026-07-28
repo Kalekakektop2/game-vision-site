@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game-Vision Analyzer — AI-ассистент для геймеров</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f0ff;
+            --neon-purple: #b026ff;
+            --neon-pink: #ff2e9a;
+            --bg-deep: #07060d;
+            --bg-card: #0f0e1a;
+        }
+
+        * { font-family: 'Rajdhani', 'Inter', sans-serif; }
+        h1, h2, h3, .font-display { font-family: 'Orbitron', sans-serif; }
+
+        body {
+            background: var(--bg-deep);
+            color: #e8e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Анимированный фон-сетка */
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(176, 38, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Свечение */
+        .glow-cyan { box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(0, 240, 255, 0.2); }
+        .glow-purple { box-shadow: 0 0 20px rgba(176, 38, 255, 0.4), 0 0 40px rgba(176, 38, 255, 0.2); }
+        .text-glow { text-shadow: 0 0 15px rgba(0, 240, 255, 0.6); }
+
+        /* Градиентный текст */
+        .gradient-text {
+            background: linear-gradient(135deg, #00f0ff 0%, #b026ff 50%, #ff2e9a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Кнопка CTA */
+        .btn-cta {
+            background: linear-gradient(135deg, #00f0ff 0%, #b026ff 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 240, 255, 0.5);
+        }
+        .btn-cta::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-cta:hover::before { left: 100%; }
+
+        /* Орбы свечения на фоне */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 8s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        /* === Игровая сцена демо === */
+        .game-scene {
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(176, 38, 255, 0.3), transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(0, 240, 255, 0.2), transparent 50%),
+                linear-gradient(180deg, #1a0f2e 0%, #0d0820 60%, #0a0518 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .game-scene::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 60% 70%, rgba(0,240,255,0.5), transparent),
+                radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40% 80%, rgba(176,38,255,0.4), transparent);
+            background-size: 100% 100%;
+        }
+
+        /* Интерактивные предметы */
+        .game-item {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            z-index: 2;
+        }
+        .game-item:hover {
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 12px var(--neon-cyan));
+        }
+        .game-item.active {
+            filter: drop-shadow(0 0 15px var(--neon-pink));
+        }
+
+        /* Рамка выделения */
+        .selection-box {
+            position: absolute;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.15);
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 3;
+        }
+        .selection-box.visible { opacity: 1; }
+        .selection-box::before, .selection-box::after {
+            content: '';
+            position: absolute;
+            width: 14px; height: 14px;
+            border: 3px solid var(--neon-cyan);
+        }
+        .selection-box::before {
+            top: -3px; left: -3px;
+            border-right: none; border-bottom: none;
+        }
+        .selection-box::after {
+            bottom: -3px; right: -3px;
+            border-left: none; border-top: none;
+        }
+        .selection-label {
+            position: absolute;
+            top: -28px; left: 0;
+            background: var(--neon-cyan);
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        /* Сканирующая линия */
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .scan-line {
+            position: absolute;
+            left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            box-shadow: 0 0 15px var(--neon-cyan);
+            animation: scan 1.5s linear;
+        }
+
+        /* AI-панель */
+        .ai-panel {
+            background: linear-gradient(160deg, rgba(15, 14, 26, 0.95), rgba(20, 15, 40, 0.95));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        .pulse-dot {
+            width: 10px; height: 10px;
+            background: #2dff88;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #2dff88;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* Курсор печати */
+        .typing-cursor::after {
+            content: '▊';
+            color: var(--neon-cyan);
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Переключатель режима */
+        .mode-btn {
+            transition: all 0.25s ease;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #00f0ff, #b026ff);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        /* Карточки фич */
+        .feature-card {
+            background: linear-gradient(160deg, rgba(15, 14, 26, 0.8), rgba(20, 15, 40, 0.6));
+            border: 1px solid rgba(176, 38, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            border-color: rgba(0, 240, 255, 0.5);
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0, 240, 255, 0.15);
+        }
+
+        /* Шаги */
+        .step-card {
+            background: linear-gradient(160deg, rgba(15, 14, 26, 0.8), rgba(20, 15, 40, 0.6));
+            border: 1px solid rgba(176, 38, 255, 0.15);
+        }
+        .step-number {
+            background: linear-gradient(135deg, #00f0ff, #b026ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Появление при скролле */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Навбар */
+        .navbar {
+            backdrop-filter: blur(12px);
+            background: rgba(7, 6, 13, 0.7);
+        }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(var(--neon-cyan), var(--neon-purple)); border-radius: 4px; }
+
+        .ai-response { line-height: 1.7; }
+    </style>
+</head>
+<body class="grid-bg">
+
+    <!-- Декоративные орбы -->
+    <div class="orb" style="width:400px;height:400px;background:#00f0ff;top:-100px;left:-100px;"></div>
+    <div class="orb" style="width:500px;height:500px;background:#b026ff;top:30%;right:-150px;animation-delay:2s;"></div>
+
+    <!-- НАВБАР -->
+    <nav class="navbar fixed top-0 left-0 right-0 z-50 border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center glow-cyan">
+                    <svg class="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93C7.05 19.44 4 16.08 4 12c0-.61.08-1.21.21-1.78L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41C17.93 5.78 20 8.65 20 12c0 2.08-.81 3.98-2.1 5.39z"/></svg>
+                </div>
+                <span class="font-display font-bold text-lg tracking-wider">GAME<span class="text-cyan-400">VISION</span></span>
+            </div>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+                <a href="#demo" class="hover:text-cyan-400 transition">Демо</a>
+                <a href="#features" class="hover:text-cyan-400 transition">Возможности</a>
+                <a href="#how" class="hover:text-cyan-400 transition">Как работает</a>
+            </div>
+            <button class="btn-cta text-black font-bold px-5 py-2.5 rounded-lg text-sm">Скачать бета</button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="relative pt-40 pb-20 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/5 mb-8">
+                <span class="pulse-dot"></span>
+                <span class="text-sm text-cyan-300 font-medium tracking-wide">AI Powered • Beta 0.9 уже доступна</span>
+            </div>
+            <h1 class="font-display font-black text-5xl md:text-7xl leading-tight mb-6">
+                Видишь предмет — <br>
+                <span class="gradient-text">узнай всё мгновенно</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+                AI-ассистент, который анализирует экран прямо во время игры. Выдели любой предмет, босса или локацию — и получи ответ без единого Alt-Tab.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button class="btn-cta text-black font-bold px-8 py-4 rounded-xl text-lg flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    Скачать бета
+                </button>
+                <a href="#demo" class="px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 hover:border-cyan-400 hover:text-cyan-400 transition flex items-center gap-2">
+                    Смотреть демо
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </a>
+            </div>
+            <p class="text-sm text-gray-600 mt-6">Windows 10/11 • Бесплатно в период бета-тестирования</p>
+        </div>
+    </section>
+
+    <!-- ИНТЕРАКТИВНОЕ ДЕМО -->
+    <section id="demo" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12 reveal">
+                <span class="text-cyan-400 font-display text-sm tracking-widest">ЖИВОЕ ДЕМО</span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl mt-3 mb-4">Попробуй прямо сейчас</h2>
+                <p class="text-gray-400 max-w-xl mx-auto">Кликни по любому предмету в игровом окне — AI выделит его и расскажет всё, что нужно знать. Переключай режим и задавай свои вопросы.</p>
+            </div>
+
+            <div class="reveal grid lg:grid-cols-5 gap-6">
+                <!-- Игровая сцена -->
+                <div class="lg:col-span-3">
+                    <div class="game-scene rounded-2xl border border-cyan-400/20 aspect-video relative" id="gameScene">
+                        <!-- Лейбл сцены -->
+                        <div class="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 border border-white/10">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <span class="text-xs font-medium text-gray-300">Eldoria Online — Подземелье Теней</span>
+                        </div>
+
+                        <!-- Подсказка -->
+                        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-lg bg-black/60 border border-cyan-400/30 text-sm text-cyan-300" id="hintLabel">
+                            👆 Нажми на предмет, чтобы AI его проанализировал
+                        </div>
+
+                        <!-- Рамка выделения -->
+                        <div class="selection-box" id="selectionBox">
+                            <span class="selection-label" id="selectionLabel">Анализ...</span>
+                        </div>
+
+                        <!-- Предметы -->
+                        <!-- Зелье маны -->
+                        <div class="game-item" data-item="potion" style="top:25%;left:15%;">
+                            <svg width="48" height="56" viewBox="0 0 48 56">
+                                <ellipse cx="24" cy="50" rx="18" ry="5" fill="rgba(0,0,0,0.4)"/>
+                                <path d="M18 8 L18 16 L12 28 Q12 48 24 48 Q36 48 36 28 L30 16 L30 8 Z" fill="url(#potGrad)" stroke="#00f0ff" stroke-width="1.5"/>
+                                <rect x="17" y="4" width="14" height="6" rx="2" fill="#8b5cf6"/>
+                                <defs><linearGradient id="potGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00f0ff" stop-opacity="0.9"/><stop offset="1" stop-color="#b026ff" stop-opacity="0.9"/></linearGradient></defs>
+                            </svg>
+                        </div>
+
+                        <!-- Меч -->
+                        <div class="game-item" data-item="sword" style="top:45%;left:48%;">
+                            <svg width="60" height="60" viewBox="0 0 60 60">
+                                <ellipse cx="30" cy="54" rx="14" ry="4" fill="rgba(0,0,0,0.4)"/>
+                                <path d="M30 4 L34 38 L30 44 L26 38 Z" fill="url(#swordGrad)" stroke="#e2e8f0" stroke-width="0.5"/>
+                                <rect x="20" y="38" width="20" height="4" rx="1" fill="#8b5cf6"/>
+                                <rect x="28" y="42" width="4" height="10" rx="1" fill="#6d28d9"/>
+                                <circle cx="30" cy="54" r="3" fill="#fbbf24"/>
+                                <defs><linearGradient id="swordGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8fafc"/><stop offset="1" stop-color="#94a3b8"/></linearGradient></defs>
+                            </svg>
+                        </div>
+
+                        <!-- Голем (босс) -->
+                        <div class="game-item" data-item="golem" style="top:18%;right:12%;">
+                            <svg width="70" height="80" viewBox="0 0 70 80">
+                                <ellipse cx="35" cy="76" rx="22" ry="5" fill="rgba(0,0,0,0.4)"/>
+                                <rect x="18" y="30" width="34" height="34" rx="6" fill="#4a3a6a" stroke="#ff2e9a" stroke-width="1.5"/>
+                                <rect x="24" y="10" width="22" height="24" rx="5" fill="#5a4a7a" stroke="#ff2e9a" stroke-width="1.5"/>
+                                <circle cx="30" cy="20" r="3" fill="#ff2e9a"/><circle cx="40" cy="20" r="3" fill="#ff2e9a"/>
+                                <rect x="22" y="38" width="8" height="4" fill="#7a5a9a"/>
+                                <rect x="40" y="38" width="8" height="4" fill="#7a5a9a"/>
+                                <rect x="28" y="46" width="14" height="3" fill="#ff2e9a" opacity="0.6"/>
+                                <!-- полоска HP -->
+                                <rect x="14" y="4" width="44" height="4" rx="2" fill="#1a1a2e"/>
+                                <rect x="14" y="4" width="28" height="4" rx="2" fill="#ff2e2e"/>
+                            </svg>
+                        </div>
+
+                        <!-- Сундук -->
+                        <div class="game-item" data-item="chest" style="bottom:12%;left:38%;">
+                            <svg width="56" height="48" viewBox="0 0 56 48">
+                                <ellipse cx="28" cy="44" rx="20" ry="4" fill="rgba(0,0,0,0.4)"/>
+                                <rect x="8" y="22" width="40" height="22" rx="3" fill="#7c4a1e" stroke="#fbbf24" stroke-width="1"/>
+                                <path d="M8 22 Q8 10 28 10 Q48 10 48 22 Z" fill="#9c5a2e" stroke="#fbbf24" stroke-width="1"/>
+                                <rect x="24" y="26" width="8" height="10" rx="1" fill="#fbbf24"/>
+                                <circle cx="28" cy="31" r="2" fill="#7c4a1e"/>
+                                <path d="M28 18 L30 22 L28 24 L26 22 Z" fill="#fbbf24" opacity="0.8"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-панель -->
+                <div class="lg:col-span-2">
+                    <div class="ai-panel rounded-2xl p-6 h-full flex flex-col">
+                        <!-- Заголовок панели -->
+                        <div class="flex items-center justify-between mb-5 pb-4 border-b border-white/10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="font-display font-bold text-sm">Game-Vision AI</div>
+                                    <div class="text-xs text-gray-500">Анализ экрана</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="pulse-dot"></span>
+                                <span class="text-xs text-green-400">Активен</span>
+                            </div>
+                        </div>
+
+                        <!-- Найденный предмет -->
+                        <div id="itemHeader" class="mb-4">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Обнаружено</div>
+                            <div class="font-display font-bold text-lg text-cyan-300" id="itemName">— ожидание выделения —</div>
+                            <div class="flex gap-2 mt-2" id="itemTags"></div>
+                        </div>
+
+                        <!-- Переключатель режима -->
+                        <div class="flex gap-2 mb-4 p-1 rounded-lg bg-black/40 border border-white/5">
+                            <button class="mode-btn active flex-1 py-2 rounded-md text-sm font-semibold" data-mode="brief" onclick="setMode('brief')">Кратко</button>
+                            <button class="mode-btn flex-1 py-2 rounded-md text-sm font-semibold text-gray-400" data-mode="detailed" onclick="setMode('detailed')">Расширенно</button>
+                        </div>
+
+                        <!-- Ответ AI -->
+                        <div class="flex-1 mb-4">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider mb-2">Ответ AI</div>
+                            <div class="ai-response text-sm text-gray-300 min-h-[120px]" id="aiResponse">
+                                <span class="text-gray-600">Выдели предмет в игровом окне, чтобы получить анализ...</span>
+                            </div>
+                        </div>
+
+                        <!-- Поле вопроса -->
+                        <div class="border-t border-white/10 pt-4">
+                            <div class="flex gap-2">
+                                <input
+                                    type="text"
+                                    id="userQuestion"
+                                    placeholder="Спроси что-нибудь об этом предмете..."
+                                    class="flex-1 bg-black/40 border border-white/10 focus:border-cyan-400/50 rounded-lg px-4 py-2.5 text-sm outline-none transition placeholder:text-gray-600"
+                                />
+                                <button onclick="askQuestion()" class="btn-cta text-black px-4 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-2 flex flex-wrap gap-2">
+                                <button class="hover:text-cyan-400 transition" onclick="quickAsk('где найти?')">где найти?</button>•
+                                <button class="hover:text-cyan-400 transition" onclick="quickAsk('характеристики')">характеристики</button>•
+                                <button class="hover:text-cyan-400 transition" onclick="quickAsk('сколько стоит?')">сколько стоит?</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ВОЗМОЖНОСТИ -->
+    <section id="features" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14 reveal">
+                <span class="text-cyan-400 font-display text-sm tracking-widest">ПОЧЕМУ GAME-VISION</span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl mt-3">Технология, меняющая игру</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="feature-card rounded-2xl p-8 reveal">
+                    <div class="w-14 h-14 rounded-xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center mb-5 glow-cyan">
+                        <svg class="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-3">Без разрыва погружения</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Никакого Alt-Tab и сворачивания игры. Анализ появляется поверх экрана за доли секунды — ты не выходишь из боя и не теряешь фокус.</p>
+                </div>
+
+                <div class="feature-card rounded-2xl p-8 reveal">
+                    <div class="w-14 h-14 rounded-xl bg-purple-400/10 border border-purple-400/30 flex items-center justify-center mb-5 glow-purple">
+                        <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-3">Поддержка любых игр</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">MMORPG, шутеры, стратегии, сурвайвалы. AI распознаёт предметы, врагов, интерфейс и локации в десятках популярных тайтлов.</p>
+                </div>
+
+                <div class="feature-card rounded-2xl p-8 reveal">
+                    <div class="w-14 h-14 rounded-xl bg-pink-400/10 border border-pink-400/30 flex items-center justify-center mb-5" style="box-shadow:0 0 20px rgba(255,46,154,0.3);">
+                        <svg class="w-7 h-7 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h5m5 7H6a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v12a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-3">Контекстные запросы</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Задавай свои вопросы текстом: «где крафтить?», «слабые стороны босса?», «лучшая сборка?». AI отвечает с учётом того, что видит на экране.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- КАК РАБОТАЕТ -->
+    <section id="how" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14 reveal">
+                <span class="text-cyan-400 font-display text-sm tracking-widest">3 ШАГА</span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl mt-3">Как это работает</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 relative">
+                <!-- Линия соединения -->
+                <div class="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-cyan-400/40 via-purple-400/40 to-pink-400/40"></div>
+
+                <div class="step-card rounded-2xl p-8 text-center reveal relative z-10">
+                    <div class="font-display font-black text-6xl step-number mb-4">01</div>
+                    <div class="w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center mx-auto mb-5">
+                        <span class="font-mono font-bold text-cyan-400 text-sm bg-black/40 px-2 py-1 rounded">SHIFT + E</span>
+                    </div>
+                    <h3 class="font-display font-bold text-lg mb-2">Назначь хоткей</h3>
+                    <p class="text-gray-400 text-sm">Привяжи удобную комбинацию клавиш. Одно нажатие — и оверлей готов к работе прямо поверх игры.</p>
+                </div>
+
+                <div class="step-card rounded-2xl p-8 text-center reveal relative z-10">
+                    <div class="font-display font-black text-6xl step-number mb-4">02</div>
+                    <div class="w-16 h-16 rounded-2xl bg-purple-400/10 border border-purple-400/30 flex items-center justify-center mx-auto mb-5">
+                        <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 3H5a2 2 0 00-2 2v2m0 10v2a2 2 0 002 2h2m10-18h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2"/></svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg mb-2">Выдели область</h3>
+                    <p class="text-gray-400 text-sm">Зажми и протяни рамку по предмету, боссу или элементу интерфейса. Снимок отправляется на анализ.</p>
+                </div>
+
+                <div class="step-card rounded-2xl p-8 text-center reveal relative z-10">
+                    <div class="font-display font-black text-6xl step-number mb-4">03</div>
+                    <div class="w-16 h-16 rounded-2xl bg-pink-400/10 border border-pink-400/30 flex items-center justify-center mx-auto mb-5">
+                        <svg class="w-8 h-8 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg mb-2">Получи ответ</h3>
+                    <p class="text-gray-400 text-sm">AI мгновенно печатает всё, что знает о выделенном объекте. Кратко или подробно — решаешь ты.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="relative py-24 px-6">
+        <div class="max-w-4xl mx-auto text-center reveal">
+            <div class="relative rounded-3xl p-12 border border-cyan-400/20 overflow-hidden" style="background:linear-gradient(135deg,rgba(0,240,255,0.05),rgba(176,38,255,0.08));">
+                <div class="orb" style="width:300px;height:300px;background:#00f0ff;top:-50%;left:50%;transform:translateX(-50%);opacity:0.15;"></div>
+                <h2 class="font-display font-black text-4xl md:text-5xl mb-5 relative z-10">Играй умнее с <span class="gradient-text">Game-Vision</span></h2>
+                <p class="text-gray-400 text-lg mb-8 relative z-10">Скачай бета-версию бесплатно и получи ранний доступ к AI-ассистенту нового поколения.</p>
+                <button class="btn-cta text-black font-bold px-10 py-4 rounded-xl text-lg relative z-10">Скачать бета бесплатно</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ФУТЕР -->
+    <footer class="border-t border-white/5 py-10 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
+                    <span class="text-black font-bold text-xs">GV</span>
+                </div>
+                <span class="font-display font-bold text-sm tracking-wider">GAME<span class="text-cyan-400">VISION</span></span>
+            </div>
+            <p class="text-gray-600 text-sm">© 2026 Game-Vision Analyzer. Бета-версия. Сделано для геймеров.</p>
+        </div>
+    </footer>
+
+    <script>
+        // === База данных предметов ===
+        const ITEMS = {
+            potion: {
+                name: 'Зелье Великой Маны',
+                tags: ['Расходник', 'Эпический', 'Мана'],
+                brief: 'Эпическое зелье, восстанавливающее 500 единиц маны мгновенно. Идеально для магов и жрецов в длительных боях.',
+                detailed: 'Зелье Великой Маны — эпический расходный материал, восстанавливающий 500 единиц маны мгновенно и дополнительно 100 единиц в течение 10 секунд.\n\n• Восстановление: 500 + 100 (10с)\n• Откат: 60 сек\n• Уровень: 35+\n\nГде найти: выпадает из элитных мобов в Подземелье Теней, крафтится Алхимимией (уровень 40) из Синих кристаллов и Лунной пыли. Также продаётся у торговца Эльдрин в городе Дейбрейк за 240 золотых.\n\nСовет: стакается до 20 штук. Эффективнее использовать перед фазой бурста, а не после.',
+                qa: {
+                    'где': 'Выпадает в Подземелье Теней, крафтится Алхимией (40 ур.) или покупается у Эльдрин в Дейбрейке за 240з.',
+                    'характеристики': 'Восстановление: 500 маны + 100 за 10 сек. Откат 60 сек. Требует 35 уровень.',
+                    'стоит': '240 золотых у NPC. На аукционе цена варьируется 180–300з в зависимости от сервера.'
+                }
+            },
+            sword: {
+                name: 'Клинок Рассвета',
+                tags: ['Оружие', 'Легендарный', 'Двуручный меч'],
+                brief: 'Легендарный двуручный меч. Наносит 420–580 урона и поджигает цель, нанося дополнительно 40 урона в секунду.',
+                detailed: 'Клинок Рассвета — легендарный двуручный меч, выкованный из осколков павшей звезды.\n\n• Урон: 420–580\n• Скорость: 1.4\n• Урон в секунду (DPS): ~357\n• Бонус: +85 Силы, +40 Крит. удар\n• Эффект: «Пламя Рассвета» — поджигает цель, 40 ед. урона/сек на 5 сек\n\nГде найти: выпадает с босса «Пепельный Лорд» в рейде Огненная Цитадель (шанс 4%). Альтернатива — квест «Последний Луч» после репутации Экзalted с Орденом Рассвета.\n\nСборка: лучше всего сочетается с сетом «Пылающее Сердце» (+15% урона огнём) и кольцом «Око Дракона».',
+                qa: {
+                    'где': 'Дроп с «Пепельного Лорда» в Огненной Цитадели (4%) или квест «Последний Луч» при репутации Exalted.',
+                    'характеристики': 'Урон 420–580, DPS ~357, +85 Силы, +40 Крит, эффект поджога 40/сек.',
+                    'стоит': 'Предмет привязан при получении — продаже не подлежит.'
+                }
+            },
+            golem: {
+                name: 'Древний Голем Теней',
+                tags: ['Босс', 'Элитный', 'Уровень 52'],
+                brief: 'Мини-босс 52 уровня. Уязвим к магии света. Главная угроза — АОЕ-удар по земле, который оглушает на 3 секунды.',
+                detailed: 'Древний Голем Теней — элитный мини-босс 52 уровня, охраняющий сундуки в Подземелье Теней.\n\n• Здоровье: 180 000\n• Уровень: 52 (элита)\n• Слабость: Свет (+50% урона)\n• Сопротивление: Физический урон (−30%)\n\nАтаки:\n1. «Удар Тени» — АОЕ по земле, оглушение 3 сек. Виден по красному кругу на полу — отбегай!\n2. «Каменный кулак» — одиночный удар по танку, ~8к урона.\n3. «Буря осколков» (30% HP) — призывает 4 адда, нужно быстро добивать.\n\nТактика: танк держит агро, ДД бьют с расстояния, хилер следит за оглушением танка. На 30% HP фокус на аддах. Награда: 5к опыта, шанс легендарного лута, ключ от сундука.',
+                qa: {
+                    'где': 'Подземелье Теней, третья комната. Спавн каждые 25 минут.',
+                    'характеристики': 'HP: 180к. Слабость к Свету (+50%), сопротивление к физике (−30%). АОЕ-оглушение, призыв аддов на 30%.',
+                    'стоит': 'Босс не продаётся. Награда: опыт, лут, ключ от сундука.'
+                }
+            },
+            chest: {
+                name: 'Зашифрованный Сундук',
+                tags: ['Объект', 'Редкий', 'Требует ключ'],
+                brief: 'Редкий сундук с эпическим лутом. Требует Ключ Теней или Взлом (уровень 45). Внутри — золото и шанс легендарного предмета.',
+                detailed: 'Зашифрованный Сундук — редкий интерактивный объект в Подземелье Теней.\n\n• Редкость: Редкий\n• Требование: Ключ Теней или навык Взлом 45+\n\nСодержимое:\n• Золото: 150–400\n• Шанс эпического предмета: 60%\n• Шанс легендарного предмета: 5%\n• Гарантированный расходник: 3–5 шт.\n\nКак открыть:\n1. Ключ Теней — дроп с Древнего Голема (см. рядом)\n2. Взлом — навык воров, требует уровень 45 и отмычки\n3. Сила — можно сломать, но шанс порчи лута 30%\n\nСовет: всегда открывай ключом или взломом, чтобы не потерять лут. После открытия спавнится через 30 минут.',
+                qa: {
+                    'где': 'Подземелье Теней, возле босса Голема. Спавн 30 мин.',
+                    'характеристики': 'Нужен Ключ Теней или Взлом 45+. Лут: золото, шанс эпика 60%, легендарки 5%.',
+                    'стоит': 'Содержимое: 150–400 золота + предметы. Ключ Теней стоит ~500з на аукционе.'
+                }
+            }
+        };
+
+        // === Состояние ===
+        let currentMode = 'brief';
+        let currentItem = null;
+        let typingTimer = null;
+
+        const selectionBox = document.getElementById('selectionBox');
+        const selectionLabel = document.getElementById('selectionLabel');
+        const gameScene = document.getElementById('gameScene');
+        const itemName = document.getElementById('itemName');
+        const itemTags = document.getElementById('itemTags');
+        const aiResponse = document.getElementById('aiResponse');
+        const hintLabel = document.getElementById('hintLabel');
+        const userQuestion = document.getElementById('userQuestion');
+
+        // === Клик по предмету ===
+        document.querySelectorAll('.game-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = item.dataset.item;
+                selectItem(item, itemId);
+            });
+        });
+
+        function selectItem(element, itemId) {
+            currentItem = ITEMS[itemId];
+
+            // Подсветка активного предмета
+            document.querySelectorAll('.game-item').forEach(i => i.classList.remove('active'));
+            element.classList.add('active');
+
+            // Позиционирование рамки выделения
+            const sceneRect = gameScene.getBoundingClientRect();
+            const itemRect = element.getBoundingClientRect();
+            const padding = 6;
+
+            selectionBox.style.width = (itemRect.width + padding * 2) + 'px';
+            selectionBox.style.height = (itemRect.height + padding * 2) + 'px';
+            selectionBox.style.left = (itemRect.left - sceneRect.left - padding) + 'px';
+            selectionBox.style.top = (itemRect.top - sceneRect.top - padding) + 'px';
+            selectionBox.classList.add('visible');
+            selectionLabel.textContent = 'Анализ...';
+
+            // Сканирующая линия
+            const oldScan = gameScene.querySelector('.scan-line');
+            if (oldScan) oldScan.remove();
+            const scan = document.createElement('div');
+            scan.className = 'scan-line';
+            selectionBox.appendChild(scan);
+
+            hintLabel.style.opacity = '0';
+
+            // Обновление панели
+            setTimeout(() => {
+                itemName.textContent = currentItem.name;
+                selectionLabel.textContent = '✓ ' + currentItem.name;
+                itemTags.innerHTML = currentItem.tags.map(t =>
+                    `<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-300 font-medium">${t}</span>`
+                ).join('');
+                typeResponse(currentMode === 'brief' ? currentItem.brief : currentItem.detailed);
+            }, 700);
+        }
+
+        // === Эффект печати ===
+        function typeResponse(text) {
+            clearInterval(typingTimer);
+            aiResponse.innerHTML = '';
+            const span = document.createElement('span');
+            span.className = 'typing-cursor';
+            aiResponse.appendChild(span);
+
+            let i = 0;
+            typingTimer = setInterval(() => {
+                if (i < text.length) {
+                    const char = text[i];
+                    span.textContent += char === '\n' ? '' : char;
+                    if (char === '\n') span.innerHTML += '<br>';
+                    i++;
+                } else {
+                    clearInterval(typingTimer);
+                    span.classList.remove('typing-cursor');
+                    span.innerHTML = span.innerHTML.replace(/\n/g, '<br>');
+                }
+            }, currentMode === 'brief' ? 12 : 6);
+        }
+
+        // === Переключатель режима ===
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+                btn.classList.toggle('text-gray-400', btn.dataset.mode !== mode);
+            });
+            if (currentItem) {
+                typeResponse(mode === 'brief' ? currentItem.brief : currentItem.detailed);
+            }
+        }
+
+        // === Кастомный вопрос ===
+        function quickAsk(q) {
+            userQuestion.value = q;
+            askQuestion();
+        }
+
+        function askQuestion() {
+            const q = userQuestion.value.trim().toLowerCase();
+            if (!q || !currentItem) {
+                if (!currentItem) {
+                    flashHint('Сначала выдели предмет в игровом окне!');
+                }
+                return;
+            }
+
+            let answer = null;
+            for (const key in currentItem.qa) {
+                if (q.includes(key)) {
+                    answer = currentItem.qa[key];
+                    break;
+                }
+            }
+            if (!answer) {
+                answer = 'По этому предмету пока нет точных данных. Попробуй спросить «где найти?», «характеристики» или «сколько стоит?» — я знаю ответы на эти вопросы.';
+            }
+
+            typeResponse(answer);
+            userQuestion.value = '';
+        }
+
+        userQuestion.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') askQuestion();
+        });
+
+        function flashHint(msg) {
+            const original = hintLabel.textContent;
+            hintLabel.textContent = '⚠️ ' + msg;
+            hintLabel.style.opacity = '1';
+            hintLabel.style.borderColor = 'rgba(255, 46, 154, 0.5)';
+            hintLabel.style.color = '#ff2e9a';
+            setTimeout(() => {
+                hintLabel.textContent = original;
+                hintLabel.style.borderColor = '';
+                hintLabel.style.color = '';
+                if (currentItem) hintLabel.style.opacity = '0';
+            }, 2500);
+        }
+
+        // === Появление при скролле ===
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.15 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // === Плавный скролл ===
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>

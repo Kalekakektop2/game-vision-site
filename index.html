@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game-Vision Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="grid-bg">
+
+    <div class="orb" style="width:400px;height:400px;background:#00f0ff;top:-100px;left:-100px;"></div>
+    <div class="orb" style="width:500px;height:500px;background:#b026ff;top:30%;right:-150px;animation-delay:2s;"></div>
+
+    <!-- НАВБАР -->
+    <nav class="navbar fixed top-0 left-0 right-0 z-50 border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+            <a href="index.html" class="flex items-center gap-3 flex-shrink-0">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center glow-cyan text-black font-display font-black">GV</div>
+                <span class="font-display font-bold text-lg tracking-wider">GAME<span class="text-cyan-400">VISION</span></span>
+            </a>
+            <div class="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-300">
+                <a href="#demo" class="hover:text-cyan-400 transition" data-i18n="nav.demo">Демо</a>
+                <a href="#features" class="hover:text-cyan-400 transition" data-i18n="nav.features">Возможности</a>
+                <a href="#how" class="hover:text-cyan-400 transition" data-i18n="nav.how">Как работает</a>
+                <a href="#pricing" class="hover:text-cyan-400 transition" data-i18n="nav.pricing">Цены</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="lang-switch">
+                    <button class="lang-btn active" data-lang="ru" onclick="setLanguage('ru')">RU</button>
+                    <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+                </div>
+                <button id="navLogin" class="px-4 py-2.5 rounded-lg text-sm font-semibold border border-white/20 hover:border-cyan-400 hover:text-cyan-400 transition" data-i18n="nav.login">Войти</button>
+                <a href="profile.html" id="navProfile" class="hidden items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-cyan-400/40 hover:bg-cyan-400/10 transition">
+                    <span class="user-avatar">?</span>
+                    <span class="hidden sm:inline" data-i18n="nav.profile">Личный кабинет</span>
+                </a>
+                <a href="https://github.com/Kalekakektop2/Viewing-application/releases/latest/download/Viewing.exe" class="btn-cta text-black font-bold px-5 py-2.5 rounded-lg text-sm hidden md:block" data-i18n="nav.download" id="btnDownloadNav">Скачать бета</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="relative pt-40 pb-20 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/5 mb-8">
+                <span class="pulse-dot"></span>
+                <span class="text-sm text-cyan-300 font-medium tracking-wide" data-i18n="hero.badge">AI Powered • Beta 0.9 уже доступна</span>
+            </div>
+            <h1 class="font-display font-black text-5xl md:text-7xl leading-tight mb-6">
+                <span data-i18n="hero.title1">Видишь предмет —</span><br>
+                <span class="gradient-text" data-i18n="hero.title2">узнай всё мгновенно</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10" data-i18n="hero.subtitle">AI-ассистент, который анализирует экран прямо во время игры. Выдели любой предмет, босса или локацию — и получи ответ без единого Alt-Tab.</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="https://github.com/Kalekakektop2/Viewing-application/releases/latest/download/Viewing.exe" class="btn-cta text-black font-bold px-8 py-4 rounded-xl text-lg" data-i18n="hero.cta1" id="btnDownloadHero">Скачать бета</a>
+                <a href="#demo" class="px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 hover:border-cyan-400 hover:text-cyan-400 transition" data-i18n="hero.cta2">Смотреть демо</a>
+            </div>
+            <p class="text-sm text-gray-600 mt-6" data-i18n="hero.os">Windows 10/11 • Бесплатно в период бета-тестирования</p>
+        </div>
+    </section>
+
+    <!-- ДЕМО -->
+    <section id="demo" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12 reveal">
+                <span class="text-cyan-400 font-display text-sm tracking-widest" data-i18n="demo.label">ЖИВОЕ ДЕМО</span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl mt-3 mb-4" data-i18n="demo.title">Попробуй прямо сейчас</h2>
+                <p class="text-gray-400 max-w-xl mx-auto" data-i18n="demo.subtitle">Кликни по любому предмету в игровом окне — AI выделит его и расскажет всё, что нужно знать.</p>
+            </div>
+            <div class="reveal grid lg:grid-cols-5 gap-6">
+                <div class="lg:col-span-3">
+                    <div class="game-scene rounded-2xl border border-cyan-400/20 aspect-video relative" id="gameScene">
+                        <div class="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 border border-white/10">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <span class="text-xs font-medium text-gray-300" data-i18n="demo.scene">Eldoria Online — Подземелье Теней</span>
+                        </div>
+                        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-lg bg-black/60 border border-cyan-400/30 text-sm text-cyan-300" id="hintLabel" data-i18n="demo.hint">👆 Нажми на предмет, чтобы AI его проанализировал</div>
+                        <div class="selection-box" id="selectionBox">
+                            <span class="selection-label" id="selectionLabel" data-i18n="demo.analyzing">Анализ...</span>
+                        </div>
+                        <div class="game-item" data-item="potion" style="top:25%;left:15%;font-size:2.5rem;">🧪</div>
+                        <div class="game-item" data-item="sword" style="top:45%;left:48%;font-size:2.75rem;">⚔️</div>
+                        <div class="game-item" data-item="golem" style="top:18%;right:12%;font-size:3rem;">🗿</div>
+                        <div class="game-item" data-item="chest" style="bottom:12%;left:38%;font-size:2.75rem;">📦</div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="ai-panel rounded-2xl p-6 h-full flex flex-col">
+                        <div class="flex items-center justify-between mb-5 pb-4 border-b border-white/10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-black font-bold">AI</div>
+                                <div>
+                                    <div class="font-display font-bold text-sm">Game-Vision AI</div>
+                                    <div class="text-xs text-gray-500" data-i18n="demo.detected">Обнаружено</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="pulse-dot"></span>
+                                <span class="text-xs text-green-400">Online</span>
+                            </div>
+                        </div>
+                        <div id="itemHeader" class="mb-4">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider mb-1" data-i18n="demo.detected">Обнаружено</div>
+                            <div class="font-display font-bold text-lg text-cyan-300" id="itemName" data-i18n="demo.waiting">— ожидание выделения —</div>
+                            <div class="flex flex-wrap gap-2 mt-2" id="itemTags"></div>
+                        </div>
+                        <div class="flex gap-2 mb-4 p-1 rounded-lg bg-black/40 border border-white/5">
+                            <button class="mode-btn active flex-1 py-2 rounded-md text-sm font-semibold" data-mode="brief" onclick="setMode('brief')" data-i18n="demo.mode.brief">Кратко</button>
+                            <button class="mode-btn flex-1 py-2 rounded-md text-sm font-semibold text-gray-400" data-mode="detailed" onclick="setMode('detailed')" data-i18n="demo.mode.detailed">Расширенно</button>
+                        </div>
+                        <div class="flex-1 mb-4">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="demo.aiTitle">Ответ AI</div>
+                            <div class="ai-response text-sm text-gray-300 min-h-[120px]" id="aiResponse">
+                                <span class="text-gray-600" data-i18n="demo.aiWaiting">Выдели предмет в игровом окне, чтобы получить анализ...</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-white/10 pt-4">
+                            <div class="flex gap-2">
+                                <input type="text" id="userQuestion" data-i18n-placeholder="demo.inputPlaceholder" placeholder="Спроси что-нибудь об этом предмете..." class="flex-1 bg-black/40 border border-white/10 focus:border-cyan-400/50 rounded-lg px-4 py-2.5 text-sm outline-none transition placeholder:text-gray-600"/>
+                                <button onclick="askQuestion()" class="btn-cta text-black px-4 rounded-lg font-bold">➤</button>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-2 flex flex-wrap gap-2 items-center">
+                                <button class="hover:text-cyan-400 transition" data-quick-ask="where" onclick="quickAsk(t('demo.q.where'))" data-i18n="demo.q.where">где найти?</button>•
+                                <button class="hover:text-cyan-400 transition" data-quick-ask="stats" onclick="quickAsk(t('demo.q.stats'))" data-i18n="demo.q.stats">характеристики</button>•
+                                <button class="hover:text-cyan-400 transition" data-quick-ask="price" onclick="quickAsk(t('demo.q.price'))" data-i18n="demo.q.price">сколько стоит?</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ВОЗМОЖНОСТИ -->
+    <section id="features" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14 reveal">
+                <span class="text-cyan-400 font-display text-sm tracking-widest" data-i18n="features.label">ПОЧЕМУ GAME-VISION</span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl mt-3" data-i18n="features.title">Технология, меняющая игру</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="feature-card rounded-2xl p-8 reveal">
+                    <div class="w-14 h-14 rounded-xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center mb-5 glow-cyan text-2xl">👁️</div>
+                    <h3 class="font-display font-bold text-xl mb-3" data-i18n="features.f1.title">Без разрыва погружения</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed" data-i18n="features.f1.desc">Никакого Alt-Tab и сворачивания игры. Анализ появляется поверх экрана за доли секунды.</p>
+                </div>
+                <div class="feature-card rounded-2xl p-8 reveal">
+                    <div class="w-14 h-14 rounded-xl bg-purple-400/10 border border-purple-400/30 flex items-center justify-center mb-5 glow-purple text-2xl">🎮</div>
+                    <h3 class="font-display font-bold text-xl mb-3" data-i18n="features.f2.title">Поддержка любых игр</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed" data-i18n="features.f2.desc">MMORPG, шутеры, стратегии, сурвайвалы. AI распознаёт предметы, врагов, интерфейс и локации.</p>
+                </div>
+                <div class="feature-card rounded-2xl p-8 reveal">
+                    <div class="w-14 h-14 rounded-xl bg-pink-400/10 border border-pink-400/30 flex items-center justify-center mb-5 text-2xl" style="box-shadow:0 0 20px rgba(255,46,154,0.3);">💬</div>
+                    <h3 class="font-display font-bold text-xl mb-3" data-i18n="features.f3.title">Контекстные запросы</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed" data-i18n="features.f3.desc">Задавай свои вопросы текстом: «где крафтить?», «слабые стороны босса?», «лучшая сборка?».</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- КАК РАБОТАЕТ -->
+    <section id="how" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14 reveal">
+                <span class="text-cyan-400 font-display text-sm tracking-widest" data-i18n="how.label">3 ШАГА</span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl mt-3" data-i18n="how.title">Как это работает</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 relative">
+                <div class="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-cyan-400/40 via-purple-400/40 to-pink-400/40"></div>
+                <div class="step-card rounded-2xl p-8 text-center reveal relative z-10">
+                    <div class="font-display font-black text-6xl step-number mb-4">01</div>
+                    <div class="w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center mx-auto mb-5">
+                        <span class="font-mono font-bold text-cyan-400 text-sm bg-black/40 px-2 py-1 rounded">SHIFT + E</span>
+                    </div>
+                    <h3 class="font-display font-bold text-lg mb-2" data-i18n="how.step1.title">Назначь хоткей</h3>
+                    <p class="text-gray-400 text-sm" data-i18n="how.step1.desc">Привяжи удобную комбинацию клавиш.</p>
+                </div>
+                <div class="step-card rounded-2xl p-8 text-center reveal relative z-10">
+                    <div class="font-display font-black text-6xl step-number mb-4">02</div>
+                    <div class="w-16 h-16 rounded-2xl bg-purple-400/10 border border-purple-400/30 flex items-center justify-center mx-auto mb-5 text-3xl">🖱️</div>
+                    <h3 class="font-display font-bold text-lg mb-2" data-i18n="how.step2.title">Выдели область</h3>
+                    <p class="text-gray-400 text-sm" data-i18n="how.step2.desc">Зажми и протяни рамку по предмету.</p>
+                </div>
+                <div class="step-card rounded-2xl p-8 text-center reveal relative z-10">
+                    <div class="font-display font-black text-6xl step-number mb-4">03</div>
+                    <div class="w-16 h-16 rounded-2xl bg-pink-400/10 border border-pink-400/30 flex items-center justify-center mx-auto mb-5 text-3xl">💡</div>
+                    <h3 class="font-display font-bold text-lg mb-2" data-i18n="how.step3.title">Получи ответ</h3>
+                    <p class="text-gray-400 text-sm" data-i18n="how.step3.desc">AI мгновенно печатает всё, что знает о выделенном объекте.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ЦЕНЫ -->
+    <section id="pricing" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14 reveal">
+                <span class="text-cyan-400 font-display text-sm tracking-widest" data-i18n="pricing.label">ТАРИФЫ</span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl mt-3" data-i18n="pricing.title">Простые и честные цены</h2>
+                <p class="text-gray-400 max-w-xl mx-auto mt-3" data-i18n="pricing.subtitle">Один тариф — без скрытых платежей и автопродления.</p>
+            </div>
+            <div class="max-w-md mx-auto reveal">
+                <div class="pricing-card p-10 relative">
+                    <div class="pricing-badge" data-i18n="pricing.plan.name">Доступ на 1 месяц</div>
+                    <div class="text-center mb-8">
+                        <h3 class="font-display font-bold text-2xl mb-3" data-i18n="pricing.plan.name">Доступ на 1 месяц</h3>
+                        <p class="text-gray-400 text-sm mb-6" data-i18n="pricing.plan.desc">Полный доступ к Game-Vision AI на 30 дней. Без ограничений.</p>
+                        <div class="flex items-baseline justify-center gap-2">
+                            <span class="font-display font-black text-5xl gradient-text" id="priceMain">450 ₽</span>
+                            <span class="text-gray-500 text-lg" id="priceUsd">/ $5</span>
+                        </div>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-cyan-400">✓</span><span data-i18n="pricing.feature1">Безлимитный AI-анализ предметов</span></li>
+                        <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-cyan-400">✓</span><span data-i18n="pricing.feature2">Поддержка всех игр</span></li>
+                        <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-cyan-400">✓</span><span data-i18n="pricing.feature3">Кастомные промпты</span></li>
+                        <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-cyan-400">✓</span><span data-i18n="pricing.feature4">Приоритетная поддержка</span></li>
+                    </ul>
+                    <button data-pricing-cta class="btn-cta text-black font-bold w-full py-4 rounded-xl text-lg" data-i18n="pricing.plan.cta">Купить подписку</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="relative py-24 px-6">
+        <div class="max-w-4xl mx-auto text-center reveal">
+            <div class="relative rounded-3xl p-12 border border-cyan-400/20 overflow-hidden" style="background:linear-gradient(135deg,rgba(0,240,255,0.05),rgba(176,38,255,0.08));">
+                <div class="orb" style="width:300px;height:300px;background:#00f0ff;top:-50%;left:50%;transform:translateX(-50%);opacity:0.15;"></div>
+                <h2 class="font-display font-black text-4xl md:text-5xl mb-5 relative z-10">Играй умнее с <span class="gradient-text">Game-Vision</span></h2>
+                <p class="text-gray-400 text-lg mb-8 relative z-10" data-i18n="pricing.subtitle">Один тариф — без скрытых платежей.</p>
+                <a href="https://github.com/Kalekakektop2/Viewing-application/releases/latest/download/Viewing.exe" class="btn-cta text-black font-bold px-10 py-4 rounded-xl text-lg relative z-10" data-i18n="hero.cta1" id="btnDownloadFooter">Скачать бета</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ФУТЕР -->
+    <footer class="border-t border-white/5 py-10 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center"><span class="text-black font-bold text-xs">GV</span></div>
+                <span class="font-display font-bold text-sm tracking-wider">GAME<span class="text-cyan-400">VISION</span></span>
+            </div>
+            <p class="text-gray-600 text-sm" data-i18n="footer.copyright">© 2026 Game-Vision Analyzer. Бета-версия. Сделано для геймеров.</p>
+        </div>
+    </footer>
+
+    <!-- МОДАЛКА: ВХОД -->
+    <div id="loginModal" class="auth-modal hidden">
+        <div class="auth-modal-content">
+            <button class="auth-close" data-modal-close>&times;</button>
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center mx-auto mb-4 glow-cyan text-black font-bold text-xl">🔑</div>
+                <h3 class="font-display font-bold text-xl" data-i18n="auth.login.title">Вход в аккаунт</h3>
+                <p class="text-gray-500 text-sm mt-1" data-i18n="auth.login.subtitle">Рады видеть тебя снова, игрок!</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="auth.email">Email</label>
+                    <input type="email" name="email" required class="auth-input" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="auth.password">Пароль</label>
+                    <input type="password" name="password" required class="auth-input" placeholder="••••••••">
+                </div>
+                <div id="loginError" class="auth-error hidden"></div>
+                <button type="submit" class="btn-cta text-black font-bold w-full py-3 rounded-xl" data-i18n="auth.loginBtn">Войти</button>
+            </form>
+            <div class="text-center mt-4">
+                <button onclick="gvAuth.switchToRegister()" class="text-sm text-cyan-400 hover:underline" data-i18n="auth.toRegister">Нет аккаунта? Зарегистрироваться</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: РЕГИСТРАЦИЯ -->
+    <div id="registerModal" class="auth-modal hidden">
+        <div class="auth-modal-content">
+            <button class="auth-close" data-modal-close>&times;</button>
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center mx-auto mb-4 glow-cyan text-black font-bold text-xl">👤</div>
+                <h3 class="font-display font-bold text-xl" data-i18n="auth.register.title">Создание аккаунта</h3>
+                <p class="text-gray-500 text-sm mt-1" data-i18n="auth.register.subtitle">Присоединяйся к Game-Vision за минуту</p>
+            </div>
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="auth.email">Email</label>
+                    <input type="email" name="email" required class="auth-input" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 uppercase tracking-wider mb-2" data-i18n="auth.password">Пароль</label>
+                    <input type="password" name="password" required class="auth-input" placeholder="••••••••">
+                    <p class="text-xs text-gray-600 mt-1" data-i18n="auth.passwordHint">Минимум 6 символов</p>
+                </div>
+                <div id="registerError" class="auth-error hidden"></div>
+                <button type="submit" class="btn-cta text-black font-bold w-full py-3 rounded-xl" data-i18n="auth.registerBtn">Зарегистрироваться</button>
+            </form>
+            <div class="text-center mt-4">
+                <button onclick="gvAuth.switchToLogin()" class="text-sm text-cyan-400 hover:underline" data-i18n="auth.toLogin">Уже есть аккаунт? Войти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subscription.js"></script>
+    <script src="js/demo.js"></script>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.15 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
