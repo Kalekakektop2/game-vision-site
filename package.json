@@ -1,0 +1,6 @@
+{
+  "name": "game-vision-site",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Game-Vision landing + /api/analyze vision proxy"
+}
