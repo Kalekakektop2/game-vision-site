@@ -1,28 +1,29 @@
-# Game-Vision — сайт
+﻿# Game-Vision вЂ” СЃР°Р№С‚
 
-Публичный URL: https://symphonious-cobbler-d99370.netlify.app/
+РџСѓР±Р»РёС‡РЅС‹Р№ URL: https://symphonious-cobbler-d99370.netlify.app/
 
-## Скачать бета
+## РЎРєР°С‡Р°С‚СЊ Р±РµС‚Р°
 
-Кнопки ведут на GitHub Release:
+РљРЅРѕРїРєРё РІРµРґСѓС‚ РЅР° GitHub Release:
 
-https://github.com/Kalekakektop2/Viewing-application/releases/latest/download/Viewing.exe
+https://github.com/Kalekakektop2/game-vision-site/releases/latest/download/Viewing.exe
 
-## API-прокси (ключ не в exe)
+## API-РїСЂРѕРєСЃРё (РєР»СЋС‡ РЅРµ РІ exe)
 
 - Function: `/.netlify/functions/analyze`
-- Секрет: **Netlify → Site settings → Environment variables → `GEMINI_API_KEY`**
-- Опционально: `GEMINI_MODEL=gemini-flash-latest`
+- РЎРµРєСЂРµС‚: **Netlify в†’ Site settings в†’ Environment variables в†’ `GEMINI_API_KEY`**
+- РћРїС†РёРѕРЅР°Р»СЊРЅРѕ: `GEMINI_MODEL=gemini-flash-latest`
 
-После добавления переменной — Redeploy.
+РџРѕСЃР»Рµ РґРѕР±Р°РІР»РµРЅРёСЏ РїРµСЂРµРјРµРЅРЅРѕР№ вЂ” Redeploy.
 
-## Деплой
+## Р”РµРїР»РѕР№
 
 ```bash
 npx netlify-cli login
-npx netlify-cli link   # выбрать symphonious-cobbler-d99370
-npx netlify-cli env:set GEMINI_API_KEY "ваш_ключ"
+npx netlify-cli link   # РІС‹Р±СЂР°С‚СЊ symphonious-cobbler-d99370
+npx netlify-cli env:set GEMINI_API_KEY "РІР°С€_РєР»СЋС‡"
 npx netlify-cli deploy --prod
 ```
 
-Или: Netlify Dashboard → Deploys → drag & drop этой папки.
+РР»Рё: Netlify Dashboard в†’ Deploys в†’ drag & drop СЌС‚РѕР№ РїР°РїРєРё.
+
